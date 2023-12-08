@@ -6,14 +6,17 @@ fs.readFile(inputPath, 'utf-8', (err, data) => {
         console.log("error reading file"); 
         return;
     }
-
     solve7_1(data);
     // solve7_2(data);
 });
 
 function Hand(hand, bid) {
-    this.hand = hand;
+    this.hand = parseHand(hand);
     this.bid = parseInt(bid);
+}
+
+function parseHand(hand) {
+    return Array.from(hand).map(cardChrToNum);
 }
 
 function solve7_1(data) {
@@ -22,10 +25,7 @@ function solve7_1(data) {
     for (const line of lines) {
         hands.push(new Hand(...line.split(' ')));
     }
-    for (const hand of hands) {
-        addStrength(hand);
-    }
-    hands.sort((a, b) => a.strength - b.strength);
+    hands.sort((first, second) => handCmp(first.hand, second.hand));
     let res = 0;
     for (let i = 0; i < hands.length; i++) {
         res += hands[i].bid * (i + 1);
@@ -33,28 +33,37 @@ function solve7_1(data) {
     console.log(res);
 }
 
-function addStrength(hand) {
-    let strength = 0;
-    for (const card of hand.hand) {
-        strength += Math.pow(1000000000000, countOccurences(hand.hand, card)) * cardChrToNum(card);
-    }
-    hand.strength = strength;
-}
-
 function cardChrToNum(chr) {
     if (chr >= '2' && chr <= '9')
-        return Math.pow(2, parseInt(chr) - 1);
+        return parseInt(chr);
     switch (chr) {
-        case 'T': return Math.pow(2, 9);
-        case 'J': return Math.pow(2, 10);
-        case 'Q': return Math.pow(2, 11);
-        case 'K': return Math.pow(2, 12);
-        case 'A': return Math.pow(2, 13);
+        case 'T': return 10;
+        case 'J': return 11;
+        case 'Q': return 12;
+        case 'K': return 13;
+        case 'A': return 14;
     }
 }
 
-// unsafe if chr not found
-function countOccurences(str, chr) {
-    const regex = new RegExp(chr, 'g');
-    return str.match(regex).length;
+function handCmp(a, b) {
+    let power_a = 0;
+    let power_b = 0;
+    for (let i of a) {
+        power_a += Math.pow(100, countOccurrences(a, i));
+    }
+    for (let i of b) {
+        power_b += Math.pow(100, countOccurrences(b, i));
+    }
+    if (power_a != power_b)
+        return (power_a - power_b);
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] != b[i])
+            return (a[i] - b[i]);
+    }
+}
+
+function countOccurrences(arr, searchElement) {
+    return arr.reduce((count, current) => {
+      return current === searchElement ? count + 1 : count;
+    }, 0);
 }
