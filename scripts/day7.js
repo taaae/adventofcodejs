@@ -6,8 +6,8 @@ fs.readFile(inputPath, 'utf-8', (err, data) => {
         console.log("error reading file"); 
         return;
     }
-    solve7_1(data);
-    // solve7_2(data);
+    solve7(data, hand1Cmp);
+    solve7(data, hand2Cmp);
 });
 
 function Hand(hand, bid) {
@@ -19,7 +19,7 @@ function parseHand(hand) {
     return Array.from(hand).map(cardChrToNum);
 }
 
-function solve7_1(data) {
+function solve7(data, handCmp) {
     const lines = data.split('\n');
     const hands = [];
     for (const line of lines) {
@@ -45,7 +45,7 @@ function cardChrToNum(chr) {
     }
 }
 
-function handCmp(a, b) {
+function hand1Cmp(a, b) {
     let power_a = 0;
     let power_b = 0;
     for (let i of a) {
@@ -62,7 +62,65 @@ function handCmp(a, b) {
     }
 }
 
+function hand2Cmp(a, b) {
+    let max_occ_a = 0;
+    let max_occ_b = 0;
+    let kicker_a = undefined;
+    let kicker_b = undefined;
+    for (let i of a) {
+        if (i === 11)
+            continue;
+        if (max_occ_a < countOccurrences(a, i)) {
+            max_occ_a = countOccurrences(a, i);
+            kicker_a = i;
+        }
+    }
+    for (let i of b) {
+        if (i === 11)
+            continue;
+        if (max_occ_b < countOccurrences(b, i)) {
+            max_occ_b = countOccurrences(b, i);
+            kicker_b = i;
+        }
+    }
+    let power_a = 0;
+    let power_b = 0;
+    for (let i of a) {
+        if (i === 11) {
+            power_a += Math.pow(100, countOccurrences(a, i) + countOccurrences(a, kicker_a));
+            continue;
+        }
+        let jockers = 0;
+        if (i === kicker_a)
+            jockers = countOccurrences(a, 11);
+        power_a += Math.pow(100, countOccurrences(a, i) + jockers);
+    }
+    for (let i of b) {
+        if (i === 11) {
+            power_b += Math.pow(100, countOccurrences(b, i) + countOccurrences(b, kicker_b));
+            continue;
+        }
+        let jockers = 0;
+        if (i === kicker_b)
+            jockers = countOccurrences(b, 11);
+        power_b += Math.pow(100, countOccurrences(b, i) + jockers);
+    }
+    if (power_a != power_b)
+        return (power_a - power_b);
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] != b[i]) {
+            if (a[i] == 11)
+                return 1 - b[i];
+            if (b[i] == 11)
+                return a[i] - 1;
+            return (a[i] - b[i]);
+        }
+    }
+}
+
 function countOccurrences(arr, searchElement) {
+    if  (searchElement === undefined)
+        return 0;
     return arr.reduce((count, current) => {
       return current === searchElement ? count + 1 : count;
     }, 0);
